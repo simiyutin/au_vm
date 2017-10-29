@@ -3,6 +3,7 @@
 
 using namespace mathvm;
 
+//code is output parameter
 Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     Parser parser;
     Status * status = parser.parseProgram(program);
