@@ -31,9 +31,12 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const char* expr = "double x; double y;"
-            "x += 8.0; y = 2.0;"
-            "print('Hello, x=',x,' y=',y,'\n');";
+//    const char* expr = "double x; double y;"
+//            "x += 8.0; y = 2.0;"
+//            "print('Hello, x=',x,' y=',y,'\n');";
+
+    const char * expr = "int x; x = 2 + 3;";
+
     bool isDefaultExpr = true;
 
     if (script != NULL) {

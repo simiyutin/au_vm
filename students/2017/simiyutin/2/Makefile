@@ -20,7 +20,8 @@ USER_OBJ = \
    $(OBJ)/ast_printer_translator$(OBJ_SUFF) \
    $(OBJ)/ast_printer_visitor$(OBJ_SUFF) \
    $(OBJ)/bytecode_translator$(OBJ_SUFF) \
-   $(OBJ)/code$(OBJ_SUFF)
+   $(OBJ)/code$(OBJ_SUFF) \
+   $(OBJ)/bytecode_translator_visitor$(OBJ_SUFF)
 
 include $(VM_ROOT)/common.mk
 
