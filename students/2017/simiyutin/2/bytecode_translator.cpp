@@ -1,11 +1,11 @@
 #include "mathvm.h"
 #include "parser.h"
 #include "include/bytecode_translator_visitor.h"
+#include "include/code.h"
 
 using namespace mathvm;
 
 //code is output parameter
-//todo что такое inlined into instruction stream
 Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     std::cout << "bytecode translator!" << std::endl;
 
@@ -20,9 +20,10 @@ Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     node->visitChildren(&visitor);
     visitor.printBytecode();
 
+    (*code) = new CodeImpl();
 
+    //почему у Code нет никакой связи с Bytecode?
     return status;
-    //todo your code here
 
     //context? как создавать переменные? Видимо, сразу при компиляции?
     //генерировать айдишки переменных и контекстов. При интерпретации создать мапу и хранить в ней значения по айдишке или на стеке

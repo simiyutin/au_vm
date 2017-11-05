@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mathvm.h"
 #include "../../../../../include/visitors.h"
 
 #include <sstream>
@@ -15,13 +16,12 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
 #undef VISITOR_FUNCTION
 
     void printBytecode() const {
-        for (auto el: instr) {
-            std::cout << el << std::endl;
-        }
+        bytecode.dump(std::cout);
     }
 
 private:
     std::unordered_map<std::string, int> varMap;
     int globalVarCounter = 0;
-    std::vector<std::string> instr;
+    mathvm::Bytecode bytecode;
+    std::vector<mathvm::VarType> stack;
 };

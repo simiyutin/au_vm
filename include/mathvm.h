@@ -482,6 +482,7 @@ class NativeFunctionDescriptor {
     const Signature& signature() const { return _signature; }
     const void* code() const { return _code; }
 };
+
 class Code {
     typedef map<string, uint16_t> FunctionMap;
     typedef map<string, uint16_t> ConstantMap;

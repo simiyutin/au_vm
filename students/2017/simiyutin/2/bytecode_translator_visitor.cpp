@@ -8,7 +8,19 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
     std::cout << "start BinaryOpNode" << std::endl;
     node->left()->visit(this);
     node->right()->visit(this);
-    instr.push_back("ADD");
+    if (stack.size() >= 2 && stack.back() == VT_INT && stack[stack.size() - 2] == VT_INT) {
+        bytecode.addInsn(BC_IADD); // todo handle all operations
+        stack.pop_back();
+        stack.pop_back();
+        stack.push_back(VT_INT);
+    } else if (stack.size() >= 2 && stack.back() == VT_DOUBLE && stack[stack.size() - 2] == VT_DOUBLE) {
+        bytecode.addInsn(BC_DADD);
+        stack.pop_back();
+        stack.pop_back();
+        stack.push_back(VT_DOUBLE);
+    } else {
+        std::cout << "bad stack state" << std::endl;
+    }
     std::cout << "end BinaryOpNode" << std::endl;
 }
 
@@ -20,15 +32,23 @@ void BytecodeTranslatorVisitor::visitUnaryOpNode(UnaryOpNode *node) {
 
 void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) {
     std::cout << "string literal:" << node->literal() << std::endl;
+//    bytecode.addInsn(BC_SLOAD);
+//    bytecode.addInt64(node->literal());
+//    stack.push_back(VT_INT);
 }
 
 void BytecodeTranslatorVisitor::visitDoubleLiteralNode(DoubleLiteralNode *node) {
     std::cout << "double literal:" << node->literal() << std::endl;
+    bytecode.addInsn(BC_DLOAD);
+    bytecode.addInt64(node->literal());
+    stack.push_back(VT_DOUBLE);
 }
 
 void BytecodeTranslatorVisitor::visitIntLiteralNode(IntLiteralNode *node) {
     std::cout << "int literal:" << node->literal() << std::endl;
-    instr.push_back("ILOAD " + std::to_string(node->literal()));
+    bytecode.addInsn(BC_ILOAD);
+    bytecode.addInt64(node->literal());
+    stack.push_back(VT_INT);
 }
 
 void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
@@ -39,8 +59,28 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
     std::cout << "start StoreNode" << std::endl;
     node->value()->visit(this);
     //calculated value is now on TOS
+
+    if (node->var()->type() != stack.back()) {
+        std::cout << "type mismatch" << std::endl;
+    }
+
+    switch (stack.back()) {
+        case VT_DOUBLE:
+            bytecode.addInsn(BC_LOADDVAR);
+            break;
+        case VT_INT:
+            bytecode.addInsn(BC_LOADIVAR);
+            break;
+        case VT_STRING:
+            bytecode.addInsn(BC_LOADSVAR);
+            break;
+        default:
+            std::cout << "unexpected type:" << std::endl;
+            std::cout << node->var()->type() << std::endl;
+            break;
+    }
     const char * varName = tokenOp(node->op());
-    instr.push_back("STORE " + std::to_string(varMap[varName]));
+    bytecode.addInt16(varMap[varName]);
     std::cout << "end StoreNode" << std::endl;
 }
 
