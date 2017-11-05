@@ -18,6 +18,8 @@ Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     BytecodeTranslatorVisitor visitor;
     FunctionNode * node = parser.top()->node();
     node->visitChildren(&visitor);
+    visitor.printBytecode();
+
 
     return status;
     //todo your code here

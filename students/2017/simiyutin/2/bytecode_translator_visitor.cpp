@@ -1,4 +1,5 @@
 #include "include/bytecode_translator_visitor.h"
+#include <string>
 
 using namespace mathvm;
 
@@ -7,6 +8,7 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
     std::cout << "start BinaryOpNode" << std::endl;
     node->left()->visit(this);
     node->right()->visit(this);
+    instr.push_back("ADD");
     std::cout << "end BinaryOpNode" << std::endl;
 }
 
@@ -26,6 +28,7 @@ void BytecodeTranslatorVisitor::visitDoubleLiteralNode(DoubleLiteralNode *node) 
 
 void BytecodeTranslatorVisitor::visitIntLiteralNode(IntLiteralNode *node) {
     std::cout << "int literal:" << node->literal() << std::endl;
+    instr.push_back("ILOAD " + std::to_string(node->literal()));
 }
 
 void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
@@ -35,6 +38,9 @@ void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
 void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
     std::cout << "start StoreNode" << std::endl;
     node->value()->visit(this);
+    //calculated value is now on TOS
+    const char * varName = tokenOp(node->op());
+    instr.push_back("STORE " + std::to_string(varMap[varName]));
     std::cout << "end StoreNode" << std::endl;
 }
 
@@ -75,6 +81,7 @@ void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
     while (it.hasNext()) {
         const AstVar * var = it.next();
         std::cout << "var: " << var->name() << std::endl;
+        varMap[var->name()] = globalVarCounter++;
     }
 
     Scope::FunctionIterator fit(node->scope());
