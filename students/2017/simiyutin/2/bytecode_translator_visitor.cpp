@@ -66,13 +66,13 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
 
     switch (stack.back()) {
         case VT_DOUBLE:
-            bytecode.addInsn(BC_LOADDVAR);
+            bytecode.addInsn(BC_STOREDVAR);
             break;
         case VT_INT:
-            bytecode.addInsn(BC_LOADIVAR);
+            bytecode.addInsn(BC_STOREIVAR);
             break;
         case VT_STRING:
-            bytecode.addInsn(BC_LOADSVAR);
+            bytecode.addInsn(BC_STORESVAR);
             break;
         default:
             std::cout << "unexpected type:" << std::endl;

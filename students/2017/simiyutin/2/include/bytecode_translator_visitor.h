@@ -19,6 +19,10 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
         bytecode.dump(std::cout);
     }
 
+    mathvm::Bytecode getBytecode() const {
+        return bytecode;
+    }
+
 private:
     std::unordered_map<std::string, int> varMap;
     int globalVarCounter = 0;
