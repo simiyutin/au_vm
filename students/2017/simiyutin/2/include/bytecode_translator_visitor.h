@@ -4,7 +4,7 @@
 #include "../../../../../include/visitors.h"
 
 #include <sstream>
-#include <unordered_map>
+#include <map>
 #include "visitors.h"
 
 struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
@@ -23,8 +23,12 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
         return bytecode;
     }
 
+    std::map<const mathvm::AstVar *, int> getVarMap() const {
+        return varMap;
+    };
+
 private:
-    std::unordered_map<std::string, int> varMap;
+    std::map<const mathvm::AstVar *, int> varMap;
     int globalVarCounter = 0;
     mathvm::Bytecode bytecode;
     std::vector<mathvm::VarType> stack;

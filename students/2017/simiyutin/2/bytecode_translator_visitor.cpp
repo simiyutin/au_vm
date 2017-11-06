@@ -79,8 +79,8 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
             std::cout << node->var()->type() << std::endl;
             break;
     }
-    const char * varName = tokenOp(node->op());
-    bytecode.addInt16(varMap[varName]);
+    std::cout << "varnamE: " << node->var()->name() << std::endl;
+    bytecode.addInt16(varMap[node->var()]);
     std::cout << "end StoreNode" << std::endl;
 }
 
@@ -121,7 +121,7 @@ void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
     while (it.hasNext()) {
         const AstVar * var = it.next();
         std::cout << "var: " << var->name() << std::endl;
-        varMap[var->name()] = globalVarCounter++;
+        varMap[var] = globalVarCounter++;
     }
 
     Scope::FunctionIterator fit(node->scope());
@@ -137,6 +137,10 @@ void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitFunctionNode(FunctionNode *node) {
+    std::cout << "start functionNode" << std::endl;
+    node->visitChildren(this);
+    std::cout << "end functionNode" << std::endl;
+
 //    NativeCallNode * native = check_native(node);
 //    if (native) {
 //        native->visit(this);

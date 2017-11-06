@@ -1,5 +1,6 @@
 #include "include/ast_printer_translator.h"
 #include "include/ast_printer_visitor.h"
+#include "../../../../../include/visitors.h"
 #include "parser.h"
 
 using namespace mathvm;

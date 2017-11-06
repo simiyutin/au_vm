@@ -52,6 +52,10 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
         }
     }
 
+    for (pVar var : vars) {
+        var->setIntValue(varmap[topMostVars[var->name()]]);
+    }
+
     std::cout << "executed!" << std::endl;
     return Status::Ok();
 }

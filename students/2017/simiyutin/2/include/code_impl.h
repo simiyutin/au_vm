@@ -6,7 +6,8 @@
 
 struct CodeImpl : mathvm::Code {
 
-    CodeImpl(const mathvm::Bytecode & bytecode) : bytecode(bytecode), executionPoint(0) {}
+    CodeImpl(const mathvm::Bytecode & bytecode, const std::map<std::string, int> & topMostVars) :
+            bytecode(bytecode), executionPoint(0), topMostVars(topMostVars) {}
 
     mathvm::Status* execute(std::vector<mathvm::Var*>& vars) override;
 
@@ -34,4 +35,5 @@ private:
     size_t executionPoint;
     Stack stack;
     std::map<int, int> varmap;
+    std::map<std::string, int> topMostVars;
 };
