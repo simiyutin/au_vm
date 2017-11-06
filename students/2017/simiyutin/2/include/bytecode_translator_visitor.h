@@ -27,9 +27,20 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
         return varMap;
     };
 
+    std::map<std::string, int> getTopMostVars() {
+        std::map<std::string, int> result;
+        for (auto p : varMap) {
+            if (p.second < topMostVariablesNum) {
+                result[p.first->name()] = p.second;
+            }
+        }
+        return result;
+    };
+
 private:
     std::map<const mathvm::AstVar *, int> varMap;
     int globalVarCounter = 0;
     mathvm::Bytecode bytecode;
     std::vector<mathvm::VarType> stack;
+    int topMostVariablesNum = -1;
 };

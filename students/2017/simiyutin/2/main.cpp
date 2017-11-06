@@ -24,6 +24,7 @@ int main(int argc, char** argv) {
             script = argv[i];
         }
     }
+
     Translator* translator = Translator::create(impl);
 
     if (translator == 0) {
@@ -31,11 +32,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-//    const char* expr = "double x; double y;"
-//            "x += 8.0; y = 2.0;"
+    const char* expr = "double x; double y;"
+            "x += 8.0; y = 2.0;";
 //            "print('Hello, x=',x,' y=',y,'\n');";
-
-    const char * expr = "int x; x = 2 + 3;";
+//    const char * expr = "int x; x = 2 + 3;";
 
     bool isDefaultExpr = true;
 
@@ -65,14 +65,14 @@ int main(int argc, char** argv) {
             vector<Var*> vars;
 
             if (isDefaultExpr) {
-//                Var* xVar = new Var(VT_DOUBLE, "x");
-//                Var* yVar = new Var(VT_DOUBLE, "y");
-//                vars.push_back(xVar);
-//                vars.push_back(yVar);
-//                xVar->setDoubleValue(42.0);
-                Var * xVar = new Var(VT_INT, "x");
+                Var* xVar = new Var(VT_DOUBLE, "x");
+                Var* yVar = new Var(VT_DOUBLE, "y");
                 vars.push_back(xVar);
-                xVar->setIntValue(42);
+                vars.push_back(yVar);
+                xVar->setDoubleValue(42.0);
+//                Var * xVar = new Var(VT_INT, "x");
+//                vars.push_back(xVar);
+//                xVar->setIntValue(42);
             }
             Status* execStatus = code->execute(vars);
             if (execStatus->isError()) {
@@ -80,8 +80,8 @@ int main(int argc, char** argv) {
                        execStatus->getErrorCstr());
             } else {
                 if (isDefaultExpr) {
-//                    printf("x evaluated to %f\n", vars[0]->getDoubleValue());
-                    printf("x evaluated to %ld\n", vars[0]->getIntValue());
+                    printf("x evaluated to %f\n", vars[0]->getDoubleValue());
+//                    printf("x evaluated to %ld\n", vars[0]->getIntValue());
                     for (uint32_t i = 0; i < vars.size(); i++) {
                         delete vars[i];
                     }

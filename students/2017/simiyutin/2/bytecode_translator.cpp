@@ -1,6 +1,10 @@
 #include "mathvm.h"
 #include "parser.h"
 
+#include "../../../../../include/mathvm.h"
+#include "../../../../../include/ast.h"
+#include "../../../../../include/visitors.h"
+
 #include "include/bytecode_translator_visitor.h"
 #include "include/code_impl.h"
 #include <map>
@@ -23,16 +27,9 @@ Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     node->visitChildren(&visitor);
     visitor.printBytecode();
 
-    map<const AstVar*, int> varMap = visitor.getVarMap();
-    map<string, int> topMostVars;
-
-    Scope::VarIterator it(parser.top()->scope());
-    while (it.hasNext()) {
-        const AstVar * var = it.next();
-        topMostVars[var->name()] = varMap[var];
-    }
-
-    (*code) = new CodeImpl(visitor.getBytecode(), topMostVars);
+    Bytecode bytecode = visitor.getBytecode();
+    map<string, int> topMostVars = visitor.getTopMostVars();
+    (*code) = new CodeImpl(bytecode, topMostVars);
 
     return status;
 }

@@ -5,46 +5,94 @@ using namespace mathvm;
 using namespace std;
 
 using pVar = Var *;
+
+
+
 Status* CodeImpl::execute(vector<pVar> &vars) {
     std::cout << "executing!" << std::endl;
+
+    for (pVar var : vars) {
+        switch (var->type()) {
+            case VT_INT:
+                getVarMap<int64_t>()[topMostVars[var->name()]] = var->getIntValue();
+                break;
+            case VT_DOUBLE:
+                getVarMap<double>()[topMostVars[var->name()]] = var->getDoubleValue();
+                break;
+            case VT_STRING:
+                getVarMap<std::string>()[topMostVars[var->name()]] = var->getStringValue();
+                break;
+            default:
+                break;
+        }
+    }
+
+
     while (executionPoint < bytecode.length()) {
         Instruction instruction = bytecode.getInsn(executionPoint++);
         switch (instruction) {
-            case BC_ILOAD: {
+            case BC_ILOAD:
                 std::cout << "load" << std::endl;
-                std::cout << bytecode.length() << std::endl;
-                std::cout << executionPoint << std::endl;
-                int64_t val = bytecode.getInt64(executionPoint);
-                std::cout << val << std::endl;
-                stack.addInt64(val);
-                std::cout << "added!" << std::endl;
-                executionPoint += sizeof(int64_t);
+                handleLoad<int64_t>();
                 break;
-            }
 
-            case BC_IADD: {
+
+            case BC_DLOAD:
+                std::cout << "load d" << std::endl;
+                handleLoad<double>();
+                break;
+
+
+            case BC_SLOAD:
+                std::cout << "load" << std::endl;
+                handleLoad<std::string>();
+                break;
+
+
+            case BC_IADD:
                 std::cout << "add" << std::endl;
-                int64_t fst = stack.getInt64(); //todo make
-                int64_t snd = stack.getInt64(); //todo make
-                std::cout << fst << std::endl;
-                std::cout << snd << std::endl;
-                stack.addInt64(fst + snd);
+                handleAdd<int64_t>();
                 break;
-            }
 
-            case BC_STOREIVAR: {
-                std::cout << "store" << std::endl;
-                uint16_t varId = bytecode.getInt16(executionPoint);
-                executionPoint += sizeof(uint16_t);
-                std::cout << varId << std::endl;
-                int64_t val = stack.getInt64();
-                std::cout << val << std::endl;
-                std::cout << "ready for storing" << std::endl;
-                varmap[varId] = val; //TODO СДЕЛАТЬ НОРМАЛЬНЫЙ СТЕК СО СТЕКФРЕЙМАМИ
-                std::cout << bytecode.length() << std::endl;
-                std::cout << executionPoint << std::endl;
+
+            case BC_DADD:
+                std::cout << "add d" << std::endl;
+                handleAdd<double>();
                 break;
-            }
+
+
+            case BC_STOREIVAR:
+                std::cout << "store" << std::endl;
+                handleStoreVar<int64_t>();
+                break;
+
+
+            case BC_STOREDVAR:
+                std::cout << "store d" << std::endl;
+                handleStoreVar<double>();
+                break;
+
+                //todo
+//            case BC_STORESVAR:
+//                std::cout << "store" << std::endl;
+//                handleStoreVar<std::string>();
+//                break;
+
+            case BC_LOADDVAR:
+                std::cout << "loadvar d" << std::endl;
+                handleLoadVar<double>();
+                break;
+
+            case BC_LOADIVAR:
+                std::cout << "loadvar" << std::endl;
+                handleLoadVar<int64_t>();
+                break;
+
+                //todo
+//            case BC_LOADSVAR:
+//                std::cout << "loadvar" << std::endl;
+//                handleLoadVar<std::string>();
+//                break;
 
             default:
                 std::cout << "grust' pichal" << std::endl;
@@ -53,7 +101,22 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
     }
 
     for (pVar var : vars) {
-        var->setIntValue(varmap[topMostVars[var->name()]]);
+        switch (var->type()) {
+            case VT_INT:
+                var->setIntValue(getVarMap<int64_t>()[topMostVars[var->name()]]);
+                break;
+            case VT_DOUBLE:
+                var->setDoubleValue(getVarMap<double>()[topMostVars[var->name()]]);
+                break;
+            case VT_STRING: {
+                std::string val = getVarMap<std::string>()[topMostVars[var->name()]];
+                var->setStringValue(val.c_str());
+                break;
+            }
+            default:
+                break;
+        }
+
     }
 
     std::cout << "executed!" << std::endl;

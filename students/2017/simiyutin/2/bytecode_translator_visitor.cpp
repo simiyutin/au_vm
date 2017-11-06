@@ -9,7 +9,7 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
     node->left()->visit(this);
     node->right()->visit(this);
     if (stack.size() >= 2 && stack.back() == VT_INT && stack[stack.size() - 2] == VT_INT) {
-        bytecode.addInsn(BC_IADD); // todo handle all operations
+        bytecode.addInsn(BC_IADD);
         stack.pop_back();
         stack.pop_back();
         stack.push_back(VT_INT);
@@ -40,7 +40,7 @@ void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) 
 void BytecodeTranslatorVisitor::visitDoubleLiteralNode(DoubleLiteralNode *node) {
     std::cout << "double literal:" << node->literal() << std::endl;
     bytecode.addInsn(BC_DLOAD);
-    bytecode.addInt64(node->literal());
+    bytecode.addDouble(node->literal());
     stack.push_back(VT_DOUBLE);
 }
 
@@ -55,32 +55,99 @@ void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
     std::cout << "loadNode, var name = " << node->var()->name() << std::endl;
 }
 
+
+Instruction getStoreInsn(VarType type) {
+    switch (type) {
+        case VT_DOUBLE:
+            return BC_STOREDVAR;
+        case VT_INT:
+            return BC_STOREIVAR;
+        case VT_STRING:
+            return BC_STORESVAR;
+        default:
+            return BC_INVALID;
+    }
+}
+
+Instruction getLoadInsn(VarType type) {
+    switch (type) {
+        case VT_DOUBLE:
+            return BC_LOADDVAR;
+        case VT_INT:
+            return BC_LOADIVAR;
+        case VT_STRING:
+            return BC_LOADSVAR;
+        default:
+            return BC_INVALID;
+    }
+}
+
+Instruction getAddInsn(VarType type) {
+    switch (type) {
+        case VT_DOUBLE:
+            return BC_DADD;
+        case VT_INT:
+            return BC_IADD;
+        default:
+            return BC_INVALID;
+    }
+}
+
+Instruction getSubInsn(VarType type) {
+    switch (type) {
+        case VT_DOUBLE:
+            return BC_DSUB;
+        case VT_INT:
+            return BC_ISUB;
+        default:
+            return BC_INVALID;
+    }
+}
+
+
 void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
     std::cout << "start StoreNode" << std::endl;
-    node->value()->visit(this);
+
     //calculated value is now on TOS
+    node->value()->visit(this);
 
     if (node->var()->type() != stack.back()) {
         std::cout << "type mismatch" << std::endl;
     }
 
-    switch (stack.back()) {
-        case VT_DOUBLE:
-            bytecode.addInsn(BC_STOREDVAR);
+    VarType type = stack.back();
+    switch (node->op()) {
+        case tASSIGN:
+            //store tos to variable
+            bytecode.addInsn(getStoreInsn(type));
+            bytecode.addInt16(varMap[node->var()]);
             break;
-        case VT_INT:
-            bytecode.addInsn(BC_STOREIVAR);
+        case tINCRSET:
+            //load variable on tos
+            bytecode.addInsn(getLoadInsn(type));
+            bytecode.addInt16(varMap[node->var()]);
+            //load added val on tos
+            bytecode.addInsn(getAddInsn(type));
+            //store tos to variable
+            bytecode.addInsn(getStoreInsn(type));
+            bytecode.addInt16(varMap[node->var()]);
             break;
-        case VT_STRING:
-            bytecode.addInsn(BC_STORESVAR);
+        case tDECRSET:
+            //load variable on tos
+            bytecode.addInsn(getLoadInsn(type));
+            bytecode.addInt16(varMap[node->var()]);
+            //load added val on tos
+            bytecode.addInsn(getSubInsn(type));
+            //store tos to variable
+            bytecode.addInsn(getStoreInsn(type));
+            bytecode.addInt16(varMap[node->var()]);
             break;
         default:
-            std::cout << "unexpected type:" << std::endl;
-            std::cout << node->var()->type() << std::endl;
             break;
     }
+
+    stack.pop_back();
     std::cout << "varnamE: " << node->var()->name() << std::endl;
-    bytecode.addInt16(varMap[node->var()]);
     std::cout << "end StoreNode" << std::endl;
 }
 
@@ -122,6 +189,9 @@ void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
         const AstVar * var = it.next();
         std::cout << "var: " << var->name() << std::endl;
         varMap[var] = globalVarCounter++;
+    }
+    if (topMostVariablesNum == -1) {
+        topMostVariablesNum = globalVarCounter;
     }
 
     Scope::FunctionIterator fit(node->scope());
