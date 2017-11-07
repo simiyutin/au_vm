@@ -5,6 +5,26 @@
 #include <map>
 
 
+namespace detail {
+    template <typename T>
+    struct image;
+
+    template <>
+    struct image<int64_t> {
+        using type = int64_t;
+    };
+
+    template <>
+    struct image<double> {
+        using type = double;
+    };
+
+    template <>
+    struct image<std::string> {
+        using type = uint16_t;
+    };
+}
+
 struct CodeImpl : mathvm::Code {
 
     CodeImpl(const mathvm::Bytecode & bytecode, const std::map<std::string, int> & topMostVars, const std::vector<std::string> & stringConstants) :
@@ -68,19 +88,43 @@ private:
 
     template <typename T>
     void handleStoreVar() {
+        handleStoreVar(identity<T>());
+    }
+
+    template <typename T>
+    void handleStoreVar(identity<T>) {
         uint16_t varId = bytecode.getInt16(executionPoint);
         executionPoint += sizeof(uint16_t);
         T val = stack.getTyped<T>();
         getVarMap<T>()[varId] = val;
     }
 
+    void handleStoreVar(identity<std::string>) {
+        uint16_t varId = bytecode.getInt16(executionPoint);
+        executionPoint += sizeof(uint16_t);
+        uint16_t stringId = stack.getTyped<uint16_t>();
+        getVarMap<std::string>()[varId] = stringId;
+    }
+
 
     template <typename T>
     void handleLoadVar() {
+        handleLoadVar(identity<T>());
+    }
+
+    template <typename T>
+    void handleLoadVar(identity<T>) {
         uint16_t varId = bytecode.getInt16(executionPoint);
         executionPoint += sizeof(uint16_t);
         T val = getVarMap<T>()[varId];
         stack.addTyped(val);
+    }
+
+    void handleLoadVar(identity<std::string>) {
+        uint16_t varId = bytecode.getInt16(executionPoint);
+        executionPoint += sizeof(uint16_t);
+        uint16_t stringId = getVarMap<std::string>()[varId];
+        stack.addUInt16(stringId);
     }
 
     template <typename T>
@@ -99,8 +143,10 @@ private:
         std::cout << stringConstants[id];
     }
 
+
+
     template <typename T>
-    std::map<int, T> & getVarMap() {
+    std::map<int, typename detail::image<T>::type> & getVarMap() {
         return getVarMap(identity<T>());
     };
 
@@ -114,8 +160,9 @@ private:
         return vmap;
     };
 
-    std::map<int, std::string> & getVarMap(identity<std::string>) {
-        static std::map<int, std::string> vmap;
+    //map from variable to string id
+    std::map<int, uint16_t> & getVarMap(identity<std::string>) {
+        static std::map<int, uint16_t> vmap;
         return vmap;
     };
 

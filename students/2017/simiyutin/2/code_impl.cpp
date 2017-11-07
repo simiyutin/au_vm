@@ -26,7 +26,7 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
                 getVarMap<double>()[topMostVars[var->name()]] = var->getDoubleValue();
                 break;
             case VT_STRING:
-                getVarMap<std::string>()[topMostVars[var->name()]] = var->getStringValue();
+                stringConstants[getVarMap<std::string>()[topMostVars[var->name()]]] = var->getStringValue();
                 break;
             default:
                 break;
@@ -34,31 +34,21 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
     }
 
     std::map<Instruction, std::function<void()>> callbacks = {
-            {BC_ILOAD, [this](){
-                handleLoad<int64_t>();
-            }},
-            {BC_DLOAD, [this](){
-                handleLoad<double>();
-            }},
-            {BC_SLOAD, [this](){
-                handleLoad<std::string>();
-            }},
-            {BC_IADD, [this](){
-                handleAdd<int64_t>();
-            }},
-            {BC_DADD, [this](){
-                handleAdd<double>();
-            }},
-            {BC_STOREIVAR, [this](){
-                handleStoreVar<int64_t>();
-            }},
-            {BC_STOREDVAR, [this](){
-                handleStoreVar<double>();
-            }},
-            {BC_LOADDVAR, [this](){
-                handleLoadVar<double>();
-            }},
+            {BC_ILOAD, [this](){handleLoad<int64_t>();}},
+            {BC_DLOAD, [this](){handleLoad<double>();}},
+            {BC_SLOAD, [this](){handleLoad<std::string>();}},
+
+            {BC_IADD, [this](){handleAdd<int64_t>();}},
+            {BC_DADD, [this](){handleAdd<double>();}},
+
+            {BC_STOREIVAR, [this](){handleStoreVar<int64_t>();}},
+            {BC_STOREDVAR, [this](){handleStoreVar<double>();}},
+            {BC_STORESVAR, [this](){handleStoreVar<std::string>();}},
+
+            {BC_LOADDVAR, [this](){handleLoadVar<double>();}},
             {BC_LOADIVAR, [this](){handleLoadVar<int64_t>();}},
+            {BC_LOADSVAR, [this](){handleLoadVar<std::string>();}},
+            
             {BC_IPRINT, [this](){handlePrint<int64_t>();}},
             {BC_DPRINT, [this](){handlePrint<double>();}},
             {BC_SPRINT, [this](){handlePrint<std::string>();}},
@@ -83,7 +73,7 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
                 var->setDoubleValue(getVarMap<double>()[topMostVars[var->name()]]);
                 break;
             case VT_STRING: {
-                std::string val = getVarMap<std::string>()[topMostVars[var->name()]];
+                std::string val = stringConstants[getVarMap<std::string>()[topMostVars[var->name()]]];
                 var->setStringValue(val.c_str());
                 break;
             }

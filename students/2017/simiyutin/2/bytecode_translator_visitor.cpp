@@ -34,7 +34,7 @@ void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) 
     std::cout << "string literal:" << node->literal() << std::endl;
     bytecode.addInsn(BC_SLOAD);
     stringConstants.push_back(node->literal());
-    bytecode.addInt16(stringConstants.size() - 1);
+    bytecode.addUInt16(stringConstants.size() - 1);
     stack.push_back(VT_STRING);
 }
 
@@ -57,17 +57,17 @@ void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
     switch (node->var()->type()) {
         case VT_INT:
             bytecode.addInsn(BC_LOADIVAR);
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             stack.push_back(VT_INT);
             break;
         case VT_DOUBLE:
             bytecode.addInsn(BC_LOADDVAR);
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             stack.push_back(VT_DOUBLE);
             break;
         case VT_STRING:
             bytecode.addInsn(BC_LOADSVAR);
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             stack.push_back(VT_STRING);
             break;
         default:
@@ -140,27 +140,27 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
         case tASSIGN:
             //store tos to variable
             bytecode.addInsn(getStoreInsn(type));
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             break;
         case tINCRSET:
             //load variable on tos
             bytecode.addInsn(getLoadInsn(type));
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             //load added val on tos
             bytecode.addInsn(getAddInsn(type));
             //store tos to variable
             bytecode.addInsn(getStoreInsn(type));
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             break;
         case tDECRSET:
             //load variable on tos
             bytecode.addInsn(getLoadInsn(type));
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             //load added val on tos
             bytecode.addInsn(getSubInsn(type));
             //store tos to variable
             bytecode.addInsn(getStoreInsn(type));
-            bytecode.addInt16(varMap[node->var()]);
+            bytecode.addUInt16(varMap[node->var()]);
             break;
         default:
             break;

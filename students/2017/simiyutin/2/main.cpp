@@ -32,10 +32,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    const char* expr = "double x; double y;"
-            "x += 8.0; y = 2.0;"
-            "print('Hello, x=',x,' y=',y,'\n');";
-//    const char * expr = "int x; x = 2 + 3;";
+//    const char* expr = "double x; double y;"
+//            "x += 8.0; y = 2.0;"
+//            "print('Hello, x=',x,' y=',y,'\n');";
+
+    const char* expr = "double x; double y; string hello;"
+            "x += 8.0; y = 2.0; hello = 'Hello, x='"
+            "print(hello,x,' y=',y,'\n');";
 
     bool isDefaultExpr = true;
 
