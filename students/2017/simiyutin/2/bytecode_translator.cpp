@@ -1,5 +1,6 @@
 #include "mathvm.h"
 #include "parser.h"
+#include <fstream>
 
 #include "../../../../../include/mathvm.h"
 #include "../../../../../include/ast.h"
@@ -25,12 +26,13 @@ Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
     FunctionNode * node = parser.top()->node();
 
     node->visitChildren(&visitor);
-    visitor.printBytecode();
 
     Bytecode bytecode = visitor.getBytecode();
     map<string, int> topMostVars = visitor.getTopMostVars();
     vector<string> stringConstants = visitor.getStringConstants();
     (*code) = new CodeImpl(bytecode, topMostVars, stringConstants);
+    std::ofstream ofs("lastBytecode.txt");
+    (*code)->disassemble(ofs);
 
     return status;
 }

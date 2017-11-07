@@ -82,9 +82,63 @@ private:
     void handleAdd() {
         T fst = stack.getTyped<T>();
         T snd = stack.getTyped<T>();
-        stack.addTyped(fst + snd); //todo pop?
+        stack.addTyped(fst + snd);
     }
 
+    template <typename T>
+    void handleSub() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst - snd);
+    }
+
+    template <typename T>
+    void handleMul() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst * snd);
+    }
+
+    template <typename T>
+    void handleDiv() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst / snd);
+    }
+
+    template <typename T>
+    void handleMod() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst % snd);
+    }
+
+    template <typename T>
+    void handleAnd() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst & snd);
+    }
+
+    template <typename T>
+    void handleOr() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst | snd);
+    }
+
+    template <typename T>
+    void handleXor() {
+        T fst = stack.getTyped<T>();
+        T snd = stack.getTyped<T>();
+        stack.addTyped(fst ^ snd);
+    }
+
+    template <typename T>
+    void handleNeg() {
+        T fst = stack.getTyped<T>();
+        stack.addTyped(-fst);
+    }
 
     template <typename T>
     void handleStoreVar() {

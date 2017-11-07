@@ -15,7 +15,7 @@ using pVar = Var *;
 //фабрика обработчиков
 
 Status* CodeImpl::execute(vector<pVar> &vars) {
-    std::cout << "executing!" << std::endl;
+//    std::cout << "executing!" << std::endl;
 
     for (pVar var : vars) {
         switch (var->type()) {
@@ -40,6 +40,23 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
 
             {BC_IADD, [this](){handleAdd<int64_t>();}},
             {BC_DADD, [this](){handleAdd<double>();}},
+
+            {BC_ISUB, [this](){handleSub<int64_t>();}},
+            {BC_DSUB, [this](){handleSub<double>();}},
+
+            {BC_IMUL, [this](){handleMul<int64_t>();}},
+            {BC_DMUL, [this](){handleMul<double>();}},
+
+            {BC_IDIV, [this](){handleDiv<int64_t>();}},
+            {BC_DDIV, [this](){handleDiv<double>();}},
+
+            {BC_INEG, [this](){handleNeg<int64_t>();}},
+            {BC_DNEG, [this](){handleNeg<double>();}},
+
+            {BC_IMOD, [this](){handleMod<int64_t>();}},
+            {BC_IAAND, [this](){handleAnd<int64_t>();}},
+            {BC_IAOR, [this](){handleOr<int64_t>();}},
+            {BC_IAXOR, [this](){handleXor<int64_t>();}},
 
             {BC_STOREIVAR, [this](){handleStoreVar<int64_t>();}},
             {BC_STOREDVAR, [this](){handleStoreVar<double>();}},
@@ -83,7 +100,7 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
 
     }
 
-    std::cout << "executed!" << std::endl;
+//    std::cout << "executed!" << std::endl;
     return Status::Ok();
 }
 

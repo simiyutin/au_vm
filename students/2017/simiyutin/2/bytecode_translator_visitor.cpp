@@ -1,37 +1,107 @@
 #include "include/bytecode_translator_visitor.h"
+#include "include/insn_factory.h"
 #include <string>
 
 using namespace mathvm;
 
 
 void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
-    std::cout << "start BinaryOpNode" << std::endl;
-    node->left()->visit(this);
+    //std::cout << "start BinaryOpNode" << std::endl;
     node->right()->visit(this);
-    if (stack.size() >= 2 && stack.back() == VT_INT && stack[stack.size() - 2] == VT_INT) {
-        bytecode.addInsn(BC_IADD);
-        stack.pop_back();
-        stack.pop_back();
-        stack.push_back(VT_INT);
-    } else if (stack.size() >= 2 && stack.back() == VT_DOUBLE && stack[stack.size() - 2] == VT_DOUBLE) {
-        bytecode.addInsn(BC_DADD);
-        stack.pop_back();
-        stack.pop_back();
-        stack.push_back(VT_DOUBLE);
-    } else {
-        std::cout << "bad stack state" << std::endl;
+    node->left()->visit(this);
+
+    switch (node->kind()) {
+        case tADD: {
+            VarType type = stack.back();
+            bytecode.addInsn(getAddInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tSUB: {
+            VarType type = stack.back();
+            bytecode.addInsn(getSubInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tMUL: {
+            VarType type = stack.back();
+            bytecode.addInsn(getMulInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tDIV: {
+            VarType type = stack.back();
+            bytecode.addInsn(getDivInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tMOD: {
+            VarType type = stack.back();
+            bytecode.addInsn(getModInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tAAND: {
+            VarType type = stack.back();
+            bytecode.addInsn(getAndInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tAOR: {
+            VarType type = stack.back();
+            bytecode.addInsn(getOrInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        case tAXOR: {
+            VarType type = stack.back();
+            bytecode.addInsn(getXorInsn(type));
+            stack.pop_back();
+            stack.pop_back();
+            stack.push_back(type);
+            break;
+        }
+        default:
+            std::cout << "unhandled binary token:" << tokenStr(node->kind()) << std::endl;
+            exit(42);
+            break;
     }
-    std::cout << "end BinaryOpNode" << std::endl;
+    //std::cout << "end BinaryOpNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitUnaryOpNode(UnaryOpNode *node) {
-    std::cout << "start UnaryOpNode" << std::endl;
+    //std::cout << "start UnaryOpNode" << std::endl;
     node->visitChildren(this);
-    std::cout << "end BinaryOpNode" << std::endl;
+    switch (node->kind()) {
+        case tSUB: {
+            VarType type = stack.back();
+            bytecode.addInsn(getNegInsn(type));
+            break;
+        }
+        default:
+            std::cout << "unhandled unary token:" << tokenStr(node->kind()) << std::endl;
+            exit(42);
+            break;
+    }
+    //std::cout << "end BinaryOpNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) {
-    std::cout << "string literal:" << node->literal() << std::endl;
+    //std::cout << "string literal:" << node->literal() << std::endl;
     bytecode.addInsn(BC_SLOAD);
     stringConstants.push_back(node->literal());
     bytecode.addUInt16(stringConstants.size() - 1);
@@ -39,21 +109,21 @@ void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) 
 }
 
 void BytecodeTranslatorVisitor::visitDoubleLiteralNode(DoubleLiteralNode *node) {
-    std::cout << "double literal:" << node->literal() << std::endl;
+    //std::cout << "double literal:" << node->literal() << std::endl;
     bytecode.addInsn(BC_DLOAD);
     bytecode.addDouble(node->literal());
     stack.push_back(VT_DOUBLE);
 }
 
 void BytecodeTranslatorVisitor::visitIntLiteralNode(IntLiteralNode *node) {
-    std::cout << "int literal:" << node->literal() << std::endl;
+    //std::cout << "int literal:" << node->literal() << std::endl;
     bytecode.addInsn(BC_ILOAD);
     bytecode.addInt64(node->literal());
     stack.push_back(VT_INT);
 }
 
 void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
-    std::cout << "loadNode, var name = " << node->var()->name() << std::endl;
+    //std::cout << "loadNode, var name = " << node->var()->name() << std::endl;
     switch (node->var()->type()) {
         case VT_INT:
             bytecode.addInsn(BC_LOADIVAR);
@@ -76,63 +146,14 @@ void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
 }
 
 
-Instruction getStoreInsn(VarType type) {
-    switch (type) {
-        case VT_DOUBLE:
-            return BC_STOREDVAR;
-        case VT_INT:
-            return BC_STOREIVAR;
-        case VT_STRING:
-            return BC_STORESVAR;
-        default:
-            return BC_INVALID;
-    }
-}
-
-Instruction getLoadInsn(VarType type) {
-    switch (type) {
-        case VT_DOUBLE:
-            return BC_LOADDVAR;
-        case VT_INT:
-            return BC_LOADIVAR;
-        case VT_STRING:
-            return BC_LOADSVAR;
-        default:
-            return BC_INVALID;
-    }
-}
-
-Instruction getAddInsn(VarType type) {
-    switch (type) {
-        case VT_DOUBLE:
-            return BC_DADD;
-        case VT_INT:
-            return BC_IADD;
-        default:
-            return BC_INVALID;
-    }
-}
-
-Instruction getSubInsn(VarType type) {
-    switch (type) {
-        case VT_DOUBLE:
-            return BC_DSUB;
-        case VT_INT:
-            return BC_ISUB;
-        default:
-            return BC_INVALID;
-    }
-}
-
-
 void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
-    std::cout << "start StoreNode" << std::endl;
+    //std::cout << "start StoreNode" << std::endl;
 
     //calculated value is now on TOS
     node->value()->visit(this);
 
     if (node->var()->type() != stack.back()) {
-        std::cout << "type mismatch" << std::endl;
+        //std::cout << "type mismatch" << std::endl;
     }
 
     VarType type = stack.back();
@@ -167,47 +188,47 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
     }
 
     stack.pop_back();
-    std::cout << "varnamE: " << node->var()->name() << std::endl;
-    std::cout << "end StoreNode" << std::endl;
+    //std::cout << "varnamE: " << node->var()->name() << std::endl;
+    //std::cout << "end StoreNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitForNode(ForNode *node) {
-    std::cout << "start forNode" << std::endl;
-    std::cout << "expression: " << std::endl;
+    //std::cout << "start forNode" << std::endl;
+    //std::cout << "expression: " << std::endl;
     node->inExpr()->visit(this);
-    std::cout << "body: " << std::endl;
+    //std::cout << "body: " << std::endl;
     node->body()->visit(this);
-    std::cout << "end forNode" << std::endl;
+    //std::cout << "end forNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
-    std::cout << "start whileNode" << std::endl;
-    std::cout << "expression:" << std::endl;
+    //std::cout << "start whileNode" << std::endl;
+    //std::cout << "expression:" << std::endl;
     node->whileExpr()->visit(this);
-    std::cout << "body:" << std::endl;
+    //std::cout << "body:" << std::endl;
     node->loopBlock()->visit(this);
-    std::cout << "end whileNode" << std::endl;
+    //std::cout << "end whileNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitIfNode(IfNode *node) {
-    std::cout << "start ifNode" << std::endl;
-    std::cout << "expression:" << std::endl;
+    //std::cout << "start ifNode" << std::endl;
+    //std::cout << "expression:" << std::endl;
     node->ifExpr()->visit(this);
-    std::cout << "then body:" << std::endl;
+    //std::cout << "then body:" << std::endl;
     node->thenBlock()->visit(this);
-    std::cout << "else body:" << std::endl;
+    //std::cout << "else body:" << std::endl;
     node->elseBlock()->visit(this);
-    std::cout << "end ifNode" << std::endl;
+    //std::cout << "end ifNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
-    std::cout << "start blockNode" << std::endl;
+    //std::cout << "start blockNode" << std::endl;
 
     Scope::VarIterator it(node->scope());
 
     while (it.hasNext()) {
         const AstVar * var = it.next();
-        std::cout << "var: " << var->name() << std::endl;
+        //std::cout << "var: " << var->name() << std::endl;
         varMap[var] = globalVarCounter++;
     }
     if (topMostVariablesNum == -1) {
@@ -217,19 +238,19 @@ void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
     Scope::FunctionIterator fit(node->scope());
     while (fit.hasNext()) {
         const AstFunction * func = fit.next();
-        std::cout << "fun:" << std::endl;
+        //std::cout << "fun:" << std::endl;
         func->node()->visit(this);
     }
 
     node->visitChildren(this);
 
-    std::cout << "end blockNode" << std::endl;
+    //std::cout << "end blockNode" << std::endl;
 }
 
 void BytecodeTranslatorVisitor::visitFunctionNode(FunctionNode *node) {
-    std::cout << "start functionNode" << std::endl;
+    //std::cout << "start functionNode" << std::endl;
     node->visitChildren(this);
-    std::cout << "end functionNode" << std::endl;
+    //std::cout << "end functionNode" << std::endl;
 
 //    NativeCallNode * native = check_native(node);
 //    if (native) {
@@ -246,8 +267,8 @@ void BytecodeTranslatorVisitor::visitFunctionNode(FunctionNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitReturnNode(ReturnNode *node) {
-    std::cout << "start returnNode" << std::endl;
-    std::cout << "end returnNode" << std::endl;
+    //std::cout << "start returnNode" << std::endl;
+    //std::cout << "end returnNode" << std::endl;
 //    indent("return");
 //    if (node->returnExpr()) {
 //        ss_ << ' ';
@@ -258,8 +279,8 @@ void BytecodeTranslatorVisitor::visitReturnNode(ReturnNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitCallNode(CallNode *node) {
-    std::cout << "start callNode" << std::endl;
-    std::cout << "end callNode" << std::endl;
+    //std::cout << "start callNode" << std::endl;
+    //std::cout << "end callNode" << std::endl;
 
 //    if (need_indent_) {
 //        indent("");
@@ -275,14 +296,14 @@ void BytecodeTranslatorVisitor::visitCallNode(CallNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitNativeCallNode(NativeCallNode *node) {
-    std::cout << "start nativeCallNode" << std::endl;
-    std::cout << "end nativeCallNode" << std::endl;
+    //std::cout << "start nativeCallNode" << std::endl;
+    //std::cout << "end nativeCallNode" << std::endl;
 //    ss_ << "native '" << node->nativeName()<< "';";
 //    newline();
 }
 
 void BytecodeTranslatorVisitor::visitPrintNode(PrintNode *node) {
-    std::cout << "start printNode" << std::endl;
+    //std::cout << "start printNode" << std::endl;
     for (int i = 0; i < (int) node->operands(); ++i) {
         node->operandAt(i)->visit(this); //now operand is on TOS
         switch (stack.back()) {
@@ -299,7 +320,7 @@ void BytecodeTranslatorVisitor::visitPrintNode(PrintNode *node) {
                 break;
         }
     }
-    std::cout << "end printNode" << std::endl;
+    //std::cout << "end printNode" << std::endl;
 
 //    indent("print(");
 //    for (int i = 0; i < (int) node->operands(); ++i) {
