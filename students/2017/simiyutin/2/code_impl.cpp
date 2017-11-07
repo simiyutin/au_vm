@@ -1,12 +1,18 @@
 #include "include/code_impl.h"
 #include <cassert>
+#include <functional>
 
 using namespace mathvm;
 using namespace std;
 
 using pVar = Var *;
 
-
+//TODO
+//print
+//стринги
+//все операции (бинарные, например)
+//модель памяти
+//фабрика обработчиков
 
 Status* CodeImpl::execute(vector<pVar> &vars) {
     std::cout << "executing!" << std::endl;
@@ -27,76 +33,44 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
         }
     }
 
+    std::map<Instruction, std::function<void()>> callbacks = {
+            {BC_ILOAD, [this](){
+                handleLoad<int64_t>();
+            }},
+            {BC_DLOAD, [this](){
+                handleLoad<double>();
+            }},
+            {BC_SLOAD, [this](){
+                handleLoad<std::string>();
+            }},
+            {BC_IADD, [this](){
+                handleAdd<int64_t>();
+            }},
+            {BC_DADD, [this](){
+                handleAdd<double>();
+            }},
+            {BC_STOREIVAR, [this](){
+                handleStoreVar<int64_t>();
+            }},
+            {BC_STOREDVAR, [this](){
+                handleStoreVar<double>();
+            }},
+            {BC_LOADDVAR, [this](){
+                handleLoadVar<double>();
+            }},
+            {BC_LOADIVAR, [this](){handleLoadVar<int64_t>();}},
+            {BC_IPRINT, [this](){handlePrint<int64_t>();}},
+            {BC_DPRINT, [this](){handlePrint<double>();}},
+            {BC_SPRINT, [this](){handlePrint<std::string>();}},
+    };
 
     while (executionPoint < bytecode.length()) {
         Instruction instruction = bytecode.getInsn(executionPoint++);
-        switch (instruction) {
-            case BC_ILOAD:
-                std::cout << "load" << std::endl;
-                handleLoad<int64_t>();
-                break;
-
-
-            case BC_DLOAD:
-                std::cout << "load d" << std::endl;
-                handleLoad<double>();
-                break;
-
-
-            case BC_SLOAD:
-                std::cout << "load" << std::endl;
-                handleLoad<std::string>();
-                break;
-
-
-            case BC_IADD:
-                std::cout << "add" << std::endl;
-                handleAdd<int64_t>();
-                break;
-
-
-            case BC_DADD:
-                std::cout << "add d" << std::endl;
-                handleAdd<double>();
-                break;
-
-
-            case BC_STOREIVAR:
-                std::cout << "store" << std::endl;
-                handleStoreVar<int64_t>();
-                break;
-
-
-            case BC_STOREDVAR:
-                std::cout << "store d" << std::endl;
-                handleStoreVar<double>();
-                break;
-
-                //todo
-//            case BC_STORESVAR:
-//                std::cout << "store" << std::endl;
-//                handleStoreVar<std::string>();
-//                break;
-
-            case BC_LOADDVAR:
-                std::cout << "loadvar d" << std::endl;
-                handleLoadVar<double>();
-                break;
-
-            case BC_LOADIVAR:
-                std::cout << "loadvar" << std::endl;
-                handleLoadVar<int64_t>();
-                break;
-
-                //todo
-//            case BC_LOADSVAR:
-//                std::cout << "loadvar" << std::endl;
-//                handleLoadVar<std::string>();
-//                break;
-
-            default:
-                std::cout << "grust' pichal" << std::endl;
-                break;
+        auto it = callbacks.find(instruction);
+        if (it != callbacks.end()) {
+            it->second();
+        } else {
+            std::cout << "grust' pichal" << std::endl;
         }
     }
 

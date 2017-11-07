@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
     }
 
     const char* expr = "double x; double y;"
-            "x += 8.0; y = 2.0;";
+            "x += 8.0; y = 2.0;"
+            "print(x,y);";
 //            "print('Hello, x=',x,' y=',y,'\n');";
 //    const char * expr = "int x; x = 2 + 3;";
 

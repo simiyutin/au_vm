@@ -53,6 +53,25 @@ void BytecodeTranslatorVisitor::visitIntLiteralNode(IntLiteralNode *node) {
 
 void BytecodeTranslatorVisitor::visitLoadNode(LoadNode *node) {
     std::cout << "loadNode, var name = " << node->var()->name() << std::endl;
+    switch (node->var()->type()) {
+        case VT_INT:
+            bytecode.addInsn(BC_LOADIVAR);
+            bytecode.addInt16(varMap[node->var()]);
+            stack.push_back(VT_INT);
+            break;
+        case VT_DOUBLE:
+            bytecode.addInsn(BC_LOADDVAR);
+            bytecode.addInt16(varMap[node->var()]);
+            stack.push_back(VT_DOUBLE);
+            break;
+        case VT_STRING:
+            bytecode.addInsn(BC_LOADSVAR);
+            bytecode.addInt16(varMap[node->var()]);
+            stack.push_back(VT_STRING);
+            break;
+        default:
+            break;
+    }
 }
 
 
@@ -226,6 +245,8 @@ void BytecodeTranslatorVisitor::visitFunctionNode(FunctionNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitReturnNode(ReturnNode *node) {
+    std::cout << "start returnNode" << std::endl;
+    std::cout << "end returnNode" << std::endl;
 //    indent("return");
 //    if (node->returnExpr()) {
 //        ss_ << ' ';
@@ -236,6 +257,9 @@ void BytecodeTranslatorVisitor::visitReturnNode(ReturnNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitCallNode(CallNode *node) {
+    std::cout << "start callNode" << std::endl;
+    std::cout << "end callNode" << std::endl;
+
 //    if (need_indent_) {
 //        indent("");
 //        ss_ << node->name();
@@ -250,11 +274,32 @@ void BytecodeTranslatorVisitor::visitCallNode(CallNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitNativeCallNode(NativeCallNode *node) {
+    std::cout << "start nativeCallNode" << std::endl;
+    std::cout << "end nativeCallNode" << std::endl;
 //    ss_ << "native '" << node->nativeName()<< "';";
 //    newline();
 }
 
 void BytecodeTranslatorVisitor::visitPrintNode(PrintNode *node) {
+    std::cout << "start printNode" << std::endl;
+    for (int i = 0; i < (int) node->operands(); ++i) {
+        node->operandAt(i)->visit(this); //now operand is on TOS
+        switch (stack.back()) {
+            case VT_INT:
+                bytecode.addInsn(BC_IPRINT);
+                break;
+            case VT_DOUBLE:
+                bytecode.addInsn(BC_DPRINT);
+                break;
+            case VT_STRING:
+                bytecode.addInsn(BC_SPRINT);
+                break;
+            default:
+                break;
+        }
+    }
+    std::cout << "end printNode" << std::endl;
+
 //    indent("print(");
 //    for (int i = 0; i < (int) node->operands(); ++i) {
 //        node->operandAt(i)->visit(this);

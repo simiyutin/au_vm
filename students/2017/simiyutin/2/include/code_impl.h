@@ -85,6 +85,22 @@ private:
     }
 
     template <typename T>
+    void handlePrint() {
+        handlePrint(identity<T>());
+
+    }
+
+    template <typename T>
+    void handlePrint(identity<T>) {
+        T el = stack.getTyped<T>();
+        std::cout << el << std::endl;
+    }
+
+    void handlePrint(identity<std::string>) {
+        std::cout << "print string" << std::endl;
+    }
+
+    template <typename T>
     std::map<int, T> & getVarMap() {
         return getVarMap(identity<T>());
     };
