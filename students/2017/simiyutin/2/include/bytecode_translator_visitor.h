@@ -27,6 +27,10 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
         return varMap;
     };
 
+    std::vector<std::string> getStringConstants() const {
+        return stringConstants;
+    }
+
     std::map<std::string, int> getTopMostVars() {
         std::map<std::string, int> result;
         for (auto p : varMap) {
@@ -43,4 +47,5 @@ private:
     mathvm::Bytecode bytecode;
     std::vector<mathvm::VarType> stack;
     int topMostVariablesNum = -1;
+    std::vector<std::string> stringConstants = {""};
 };

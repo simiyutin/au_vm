@@ -29,7 +29,8 @@ Status *BytecodeTranslatorImpl::translate(const string &program, Code **code) {
 
     Bytecode bytecode = visitor.getBytecode();
     map<string, int> topMostVars = visitor.getTopMostVars();
-    (*code) = new CodeImpl(bytecode, topMostVars);
+    vector<string> stringConstants = visitor.getStringConstants();
+    (*code) = new CodeImpl(bytecode, topMostVars, stringConstants);
 
     return status;
 }

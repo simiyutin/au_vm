@@ -7,8 +7,8 @@
 
 struct CodeImpl : mathvm::Code {
 
-    CodeImpl(const mathvm::Bytecode & bytecode, const std::map<std::string, int> & topMostVars) :
-            bytecode(bytecode), executionPoint(0), topMostVars(topMostVars) {}
+    CodeImpl(const mathvm::Bytecode & bytecode, const std::map<std::string, int> & topMostVars, const std::vector<std::string> & stringConstants) :
+            bytecode(bytecode), executionPoint(0), topMostVars(topMostVars), stringConstants(stringConstants) {}
 
     mathvm::Status* execute(std::vector<mathvm::Var*>& vars) override;
 
@@ -80,24 +80,23 @@ private:
         uint16_t varId = bytecode.getInt16(executionPoint);
         executionPoint += sizeof(uint16_t);
         T val = getVarMap<T>()[varId];
-        std::cout << "var val: " << val << std::endl;
         stack.addTyped(val);
     }
 
     template <typename T>
     void handlePrint() {
         handlePrint(identity<T>());
-
     }
 
     template <typename T>
     void handlePrint(identity<T>) {
         T el = stack.getTyped<T>();
-        std::cout << el << std::endl;
+        std::cout << el;
     }
 
     void handlePrint(identity<std::string>) {
-        std::cout << "print string" << std::endl;
+        uint16_t id = stack.getTyped<uint16_t>();
+        std::cout << stringConstants[id];
     }
 
     template <typename T>
@@ -125,6 +124,6 @@ private:
     mathvm::Bytecode bytecode;
     size_t executionPoint;
     Stack stack;
-
     std::map<std::string, int> topMostVars;
+    std::vector<std::string> stringConstants;
 };

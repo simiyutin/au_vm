@@ -32,9 +32,10 @@ void BytecodeTranslatorVisitor::visitUnaryOpNode(UnaryOpNode *node) {
 
 void BytecodeTranslatorVisitor::visitStringLiteralNode(StringLiteralNode *node) {
     std::cout << "string literal:" << node->literal() << std::endl;
-//    bytecode.addInsn(BC_SLOAD);
-//    bytecode.addInt64(node->literal());
-//    stack.push_back(VT_INT);
+    bytecode.addInsn(BC_SLOAD);
+    stringConstants.push_back(node->literal());
+    bytecode.addInt16(stringConstants.size() - 1);
+    stack.push_back(VT_STRING);
 }
 
 void BytecodeTranslatorVisitor::visitDoubleLiteralNode(DoubleLiteralNode *node) {
