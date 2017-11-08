@@ -80,6 +80,11 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             bytecode.addUInt16(-1);
             break;
         }
+        case tGT: {
+            bytecode.addInsn(BC_IFICMPLE);
+            bytecode.addUInt16(-1);
+            break;
+        }
         default:
             std::cout << "unhandled binary token:" << tokenStr(node->kind()) << std::endl;
             exit(42);

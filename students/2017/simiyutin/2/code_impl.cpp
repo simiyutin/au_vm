@@ -67,6 +67,7 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
             {BC_SPRINT, [this](){handlePrint<std::string>();}},
 
             {BC_IFICMPGE, [this](){handleCmpge();}},
+            {BC_IFICMPLE, [this](){handleCmple();}},
             {BC_JA, [this](){handleJa();}},
     };
 

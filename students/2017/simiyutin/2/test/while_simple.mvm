@@ -3,7 +3,7 @@ int y;
 
 x = 3;
 print('start while\n');
-while (x < 19) {
+while (19 > x) {
     print(x,'\n');
     x += 1;
 }
