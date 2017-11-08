@@ -75,6 +75,11 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             stack.push_back(type);
             break;
         }
+        case tLT: {
+            bytecode.addInsn(BC_IFICMPGE);
+            bytecode.addUInt16(-1);
+            break;
+        }
         default:
             std::cout << "unhandled binary token:" << tokenStr(node->kind()) << std::endl;
             exit(42);
@@ -201,12 +206,32 @@ void BytecodeTranslatorVisitor::visitForNode(ForNode *node) {
     //std::cout << "end forNode" << std::endl;
 }
 
-void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
+void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {//signed offset of jump destination
     //std::cout << "start whileNode" << std::endl;
-    //std::cout << "expression:" << std::endl;
+    int16_t startPosition = bytecode.length();
     node->whileExpr()->visit(this);
-    //std::cout << "body:" << std::endl;
+    int64_t frontShiftPos = bytecode.length() - 2;
+    assert(bytecode.getInt16(frontShiftPos) == -1);
+
     node->loopBlock()->visit(this);
+    bytecode.addInsn(BC_JA);
+    int16_t currentPosition = bytecode.length();
+    int16_t backShift = startPosition - currentPosition;
+//    std::cout << "start position: " << startPosition << std::endl;
+//    std::cout << "back position: " << currentPosition << std::endl;
+    bytecode.addInt16(backShift);
+
+    int16_t skipOffset = bytecode.length() - frontShiftPos;
+//    std::cout << "skipOffset: " << skipOffset << std::endl;
+
+    union {
+        int16_t val;
+        uint8_t bits[sizeof(int16_t)];
+    } u;
+    u.val = skipOffset;
+    for (size_t i = 0; i < sizeof(u.bits); ++i) {
+        bytecode.put(frontShiftPos + i, u.bits[i]);
+    }
     //std::cout << "end whileNode" << std::endl;
 }
 

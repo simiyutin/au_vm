@@ -103,6 +103,8 @@ def main(argv):
     if m is None:
       continue
     t = m.group(1)
+    # if t != 'while':
+    #     continue
     runTest(mvm, testdir, t, options.doublerun)
 
 if __name__ == '__main__':

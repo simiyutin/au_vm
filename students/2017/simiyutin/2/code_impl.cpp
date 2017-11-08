@@ -8,11 +8,7 @@ using namespace std;
 using pVar = Var *;
 
 //TODO
-//print
-//стринги
-//все операции (бинарные, например)
-//модель памяти
-//фабрика обработчиков
+// while, if, for, function call, native function call
 
 Status* CodeImpl::execute(vector<pVar> &vars) {
 //    std::cout << "executing!" << std::endl;
@@ -69,6 +65,9 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
             {BC_IPRINT, [this](){handlePrint<int64_t>();}},
             {BC_DPRINT, [this](){handlePrint<double>();}},
             {BC_SPRINT, [this](){handlePrint<std::string>();}},
+
+            {BC_IFICMPGE, [this](){handleCmpge();}},
+            {BC_JA, [this](){handleJa();}},
     };
 
     while (executionPoint < bytecode.length()) {
@@ -77,7 +76,9 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
         if (it != callbacks.end()) {
             it->second();
         } else {
-            std::cout << "grust' pichal" << std::endl;
+            size_t length;
+            const char* name = bytecodeName(instruction, &length);
+            std::cout << "grust' pichal: " << name << std::endl;
         }
     }
 
