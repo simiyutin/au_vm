@@ -248,19 +248,23 @@ void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
     Label startLabel;
     uint32_t startPosition = bytecode.length();
     node->whileExpr()->visit(this);
-    if (expressionStartLabel) {
-        expressionEndLabel = new Label();
-        bytecode.addBranch(BC_JA, *expressionEndLabel);
-        expressionStartLabel->bind(bytecode.length(), &bytecode);
+    Label * localExprStartLabel = expressionStartLabel;
+    expressionStartLabel = nullptr;
+    Label * localExprEndLabel = expressionEndLabel;
+    expressionEndLabel = nullptr;
+    //after expression visit, only one of (expressionStartLabel, expressionEndLabel) is initialized,
+    //depending on type of logical operators within expression (||, &&)
+    if (localExprStartLabel) { // || operators
+        localExprEndLabel = new Label();
+        bytecode.addBranch(BC_JA, *localExprEndLabel);
+        localExprStartLabel->bind(bytecode.length(), &bytecode);
     }
     node->loopBlock()->visit(this);
     bytecode.addBranch(BC_JA, startLabel);
     startLabel.bind(startPosition, &bytecode);
-    expressionEndLabel->bind(bytecode.length(), &bytecode);
-    delete expressionEndLabel;
-    expressionEndLabel = nullptr;
-    delete expressionStartLabel;
-    expressionStartLabel = nullptr;
+    localExprEndLabel->bind(bytecode.length(), &bytecode);
+    delete localExprStartLabel;
+    delete localExprEndLabel;
 }
 
 void BytecodeTranslatorVisitor::visitIfNode(IfNode *node) {
