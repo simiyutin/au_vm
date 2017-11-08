@@ -76,13 +76,11 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tLT: {
-            bytecode.addInsn(BC_IFICMPGE);
-            bytecode.addUInt16(-1);
+            bytecode.addBranch(BC_IFICMPGE, *curLabel);
             break;
         }
         case tGT: {
-            bytecode.addInsn(BC_IFICMPLE);
-            bytecode.addUInt16(-1);
+            bytecode.addBranch(BC_IFICMPLE, *curLabel);
             break;
         }
         default:
@@ -211,33 +209,17 @@ void BytecodeTranslatorVisitor::visitForNode(ForNode *node) {
     //std::cout << "end forNode" << std::endl;
 }
 
-void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {//signed offset of jump destination
-    //std::cout << "start whileNode" << std::endl;
-    int16_t startPosition = bytecode.length();
+void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
+    curLabel = new Label();
+    Label startLabel;
+    uint32_t startPosition = bytecode.length();
     node->whileExpr()->visit(this);
-    int64_t frontShiftPos = bytecode.length() - 2;
-    assert(bytecode.getInt16(frontShiftPos) == -1);
-
     node->loopBlock()->visit(this);
-    bytecode.addInsn(BC_JA);
-    int16_t currentPosition = bytecode.length();
-    int16_t backShift = startPosition - currentPosition;
-//    std::cout << "start position: " << startPosition << std::endl;
-//    std::cout << "back position: " << currentPosition << std::endl;
-    bytecode.addInt16(backShift);
-
-    int16_t skipOffset = bytecode.length() - frontShiftPos;
-//    std::cout << "skipOffset: " << skipOffset << std::endl;
-
-    union {
-        int16_t val;
-        uint8_t bits[sizeof(int16_t)];
-    } u;
-    u.val = skipOffset;
-    for (size_t i = 0; i < sizeof(u.bits); ++i) {
-        bytecode.put(frontShiftPos + i, u.bits[i]);
-    }
-    //std::cout << "end whileNode" << std::endl;
+    bytecode.addBranch(BC_JA, startLabel);
+    startLabel.bind(startPosition, &bytecode);
+    curLabel->bind(bytecode.length(), &bytecode);
+    delete curLabel;
+    curLabel = nullptr;
 }
 
 void BytecodeTranslatorVisitor::visitIfNode(IfNode *node) {
