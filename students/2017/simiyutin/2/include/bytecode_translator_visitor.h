@@ -50,4 +50,5 @@ private:
     std::vector<std::string> stringConstants = {""};
     mathvm::Label * expressionEndLabel = nullptr;
     mathvm::Label * expressionStartLabel = nullptr;
+    bool inverse = false;
 };

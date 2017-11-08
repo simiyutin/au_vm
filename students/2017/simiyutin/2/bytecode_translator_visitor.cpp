@@ -8,15 +8,10 @@ using namespace mathvm;
 
 void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
     //std::cout << "start BinaryOpNode" << std::endl;
-
-    if (node->kind() != tOR) {
-        node->right()->visit(this);
-        node->left()->visit(this);
-    }
-
-
     switch (node->kind()) {
         case tADD: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getAddInsn(type));
             stack.pop_back();
@@ -25,6 +20,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tSUB: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getSubInsn(type));
             stack.pop_back();
@@ -33,6 +30,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tMUL: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getMulInsn(type));
             stack.pop_back();
@@ -41,6 +40,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tDIV: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getDivInsn(type));
             stack.pop_back();
@@ -49,6 +50,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tMOD: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getModInsn(type));
             stack.pop_back();
@@ -57,6 +60,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tAAND: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getAndInsn(type));
             stack.pop_back();
@@ -65,6 +70,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tAOR: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getOrInsn(type));
             stack.pop_back();
@@ -73,6 +80,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tAXOR: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             VarType type = stack.back();
             bytecode.addInsn(getXorInsn(type));
             stack.pop_back();
@@ -81,24 +90,28 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tLT: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             if (expressionStartLabel) {
-                bytecode.addBranch(BC_IFICMPL, *expressionStartLabel);
+                bytecode.addBranch(inverse ? BC_IFICMPGE : BC_IFICMPL, *expressionStartLabel);
             } else {
                 if (!expressionEndLabel) {
                     expressionEndLabel = new Label();
                 }
-                bytecode.addBranch(BC_IFICMPGE, *expressionEndLabel);
+                bytecode.addBranch(inverse? BC_IFICMPL : BC_IFICMPGE, *expressionEndLabel);
             }
             break;
         }
         case tGT: {
+            node->right()->visit(this);
+            node->left()->visit(this);
             if (expressionStartLabel) {
-                bytecode.addBranch(BC_IFICMPG, *expressionStartLabel);
+                bytecode.addBranch(inverse ? BC_IFICMPLE : BC_IFICMPG, *expressionStartLabel);
             } else {
                 if (!expressionEndLabel) {
                     expressionEndLabel = new Label();
                 }
-                bytecode.addBranch(BC_IFICMPLE, *expressionEndLabel);
+                bytecode.addBranch(inverse ? BC_IFICMPG : BC_IFICMPLE, *expressionEndLabel);
             }
             break;
         }
@@ -107,6 +120,8 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
                 assert(!expressionStartLabel);
                 expressionEndLabel = new Label();
             }
+            node->right()->visit(this);
+            node->left()->visit(this);
             break;
         }
         case tOR: {
@@ -128,11 +143,18 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
 
 void BytecodeTranslatorVisitor::visitUnaryOpNode(UnaryOpNode *node) {
     //std::cout << "start UnaryOpNode" << std::endl;
-    node->visitChildren(this);
     switch (node->kind()) {
         case tSUB: {
+            node->visitChildren(this);
             VarType type = stack.back();
             bytecode.addInsn(getNegInsn(type));
+            break;
+        }
+        case tNOT: {
+            bool prevInverse = inverse;
+            inverse = !inverse;
+            node->visitChildren(this);
+            inverse = prevInverse;
             break;
         }
         default:
@@ -268,14 +290,28 @@ void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitIfNode(IfNode *node) {
-    //std::cout << "start ifNode" << std::endl;
-    //std::cout << "expression:" << std::endl;
     node->ifExpr()->visit(this);
-    //std::cout << "then body:" << std::endl;
+    Label * localExprStartLabel = expressionStartLabel;
+    expressionStartLabel = nullptr;
+    Label * localExprEndLabel = expressionEndLabel;
+    expressionEndLabel = nullptr;
+    //after expression visit, only one of (expressionStartLabel, expressionEndLabel) is initialized,
+    //depending on type of logical operators within expression (||, &&)
+    if (localExprStartLabel) { // || operators
+        localExprEndLabel = new Label();
+        bytecode.addBranch(BC_JA, *localExprEndLabel);
+        localExprStartLabel->bind(bytecode.length(), &bytecode);
+    }
     node->thenBlock()->visit(this);
-    //std::cout << "else body:" << std::endl;
-    node->elseBlock()->visit(this);
-    //std::cout << "end ifNode" << std::endl;
+    Label endOfElseBlockLabel;
+    bytecode.addBranch(BC_JA, endOfElseBlockLabel);
+    localExprEndLabel->bind(bytecode.length(), &bytecode);
+    if (node->elseBlock()) {
+        node->elseBlock()->visit(this);
+    }
+    endOfElseBlockLabel.bind(bytecode.current(), &bytecode);
+    delete localExprStartLabel;
+    delete localExprEndLabel;
 }
 
 void BytecodeTranslatorVisitor::visitBlockNode(BlockNode *node) {
