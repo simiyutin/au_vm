@@ -41,6 +41,17 @@ struct BytecodeTranslatorVisitor : mathvm::AstBaseVisitor {
         return result;
     };
 
+    void handleBinaryLogic(mathvm::Instruction straight, mathvm::Instruction opposite) {
+        if (expressionStartLabel) {
+            bytecode.addBranch(inverse ? opposite : straight, *expressionStartLabel);
+        } else {
+            if (!expressionEndLabel) {
+                expressionEndLabel = new mathvm::Label();
+            }
+            bytecode.addBranch(inverse? straight : opposite, *expressionEndLabel);
+        }
+    }
+
 private:
     std::map<const mathvm::AstVar *, int> varMap;
     int globalVarCounter = 0;

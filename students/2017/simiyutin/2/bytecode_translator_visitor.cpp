@@ -89,30 +89,34 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             stack.push_back(type);
             break;
         }
+        case tEQ: {
+            node->right()->visit(this);
+            node->left()->visit(this);
+            handleBinaryLogic(BC_IFICMPE, BC_IFICMPNE);
+            break;
+        }
         case tLT: {
             node->right()->visit(this);
             node->left()->visit(this);
-            if (expressionStartLabel) {
-                bytecode.addBranch(inverse ? BC_IFICMPGE : BC_IFICMPL, *expressionStartLabel);
-            } else {
-                if (!expressionEndLabel) {
-                    expressionEndLabel = new Label();
-                }
-                bytecode.addBranch(inverse? BC_IFICMPL : BC_IFICMPGE, *expressionEndLabel);
-            }
+            handleBinaryLogic(BC_IFICMPL, BC_IFICMPGE);
             break;
         }
         case tGT: {
             node->right()->visit(this);
             node->left()->visit(this);
-            if (expressionStartLabel) {
-                bytecode.addBranch(inverse ? BC_IFICMPLE : BC_IFICMPG, *expressionStartLabel);
-            } else {
-                if (!expressionEndLabel) {
-                    expressionEndLabel = new Label();
-                }
-                bytecode.addBranch(inverse ? BC_IFICMPG : BC_IFICMPLE, *expressionEndLabel);
-            }
+            handleBinaryLogic(BC_IFICMPG, BC_IFICMPLE);
+            break;
+        }
+        case tGE: {
+            node->right()->visit(this);
+            node->left()->visit(this);
+            handleBinaryLogic(BC_IFICMPGE, BC_IFICMPL);
+            break;
+        }
+        case tLE: {
+            node->right()->visit(this);
+            node->left()->visit(this);
+            handleBinaryLogic(BC_IFICMPLE, BC_IFICMPG);
             break;
         }
         case tAND: {
