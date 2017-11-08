@@ -211,77 +211,37 @@ private:
     }
 
     void handleCmpge() {
-        int16_t shift = bytecode.getInt16(executionPoint);
-        int64_t upper = stack.getTyped<int64_t>();
-        int64_t lower = stack.getTyped<int64_t>();
-        stack.addTyped(lower);
-        stack.addTyped(upper);
-        if (upper >= lower) {
-            executionPoint += shift;
-        } else {
-            executionPoint += sizeof(int16_t);
-        }
+        handleConditionalJump([](int upper, int lower){ return upper >= lower;});
     }
 
     void handleCmple() {
-        int16_t shift = bytecode.getInt16(executionPoint);
-        int64_t upper = stack.getTyped<int64_t>();
-        int64_t lower = stack.getTyped<int64_t>();
-        stack.addTyped(lower);
-        stack.addTyped(upper);
-        if (upper <= lower) {
-            executionPoint += shift;
-        } else {
-            executionPoint += sizeof(int16_t);
-        }
+        handleConditionalJump([](int upper, int lower){ return upper <= lower;});
     }
 
     void handleCmpg() {
-        int16_t shift = bytecode.getInt16(executionPoint);
-        int64_t upper = stack.getTyped<int64_t>();
-        int64_t lower = stack.getTyped<int64_t>();
-        stack.addTyped(lower);
-        stack.addTyped(upper);
-        if (upper > lower) {
-            executionPoint += shift;
-        } else {
-            executionPoint += sizeof(int16_t);
-        }
+        handleConditionalJump([](int upper, int lower){ return upper > lower;});
     }
 
     void handleCmpl() {
-        int16_t shift = bytecode.getInt16(executionPoint);
-        int64_t upper = stack.getTyped<int64_t>();
-        int64_t lower = stack.getTyped<int64_t>();
-        stack.addTyped(lower);
-        stack.addTyped(upper);
-        if (upper < lower) {
-            executionPoint += shift;
-        } else {
-            executionPoint += sizeof(int16_t);
-        }
+        handleConditionalJump([](int upper, int lower){ return upper < lower;});
     }
 
     void handleCmpe() {
-        int16_t shift = bytecode.getInt16(executionPoint);
-        int64_t upper = stack.getTyped<int64_t>();
-        int64_t lower = stack.getTyped<int64_t>();
-        stack.addTyped(lower);
-        stack.addTyped(upper);
-        if (upper == lower) {
-            executionPoint += shift;
-        } else {
-            executionPoint += sizeof(int16_t);
-        }
+        handleConditionalJump([](int upper, int lower){ return upper == lower;});
     }
 
     void handleCmpne() {
+        handleConditionalJump([](int upper, int lower){ return upper != lower;});
+    }
+
+    template <typename FUNCTOR>
+    void handleConditionalJump(const FUNCTOR & f) {
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
         stack.addTyped(lower);
         stack.addTyped(upper);
-        if (upper != lower) {
+        if (f(upper, lower)) {
             executionPoint += shift;
         } else {
             executionPoint += sizeof(int16_t);

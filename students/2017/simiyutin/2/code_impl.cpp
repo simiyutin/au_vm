@@ -8,7 +8,7 @@ using namespace std;
 using pVar = Var *;
 
 //TODO
-// while, if, for, function call, native function call
+// function call, native function call, local variables within loops
 
 Status* CodeImpl::execute(vector<pVar> &vars) {
 //    std::cout << "executing!" << std::endl;
