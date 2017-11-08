@@ -68,6 +68,8 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
 
             {BC_IFICMPGE, [this](){handleCmpge();}},
             {BC_IFICMPLE, [this](){handleCmple();}},
+            {BC_IFICMPG, [this](){handleCmpg();}},
+            {BC_IFICMPL, [this](){handleCmpl();}},
             {BC_JA, [this](){handleJa();}},
     };
 

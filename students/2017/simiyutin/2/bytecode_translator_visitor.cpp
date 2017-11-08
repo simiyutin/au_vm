@@ -1,14 +1,19 @@
 #include "include/bytecode_translator_visitor.h"
 #include "include/insn_factory.h"
 #include <string>
+#include <fstream>
 
 using namespace mathvm;
 
 
 void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
     //std::cout << "start BinaryOpNode" << std::endl;
-    node->right()->visit(this);
-    node->left()->visit(this);
+
+    if (node->kind() != tOR) {
+        node->right()->visit(this);
+        node->left()->visit(this);
+    }
+
 
     switch (node->kind()) {
         case tADD: {
@@ -76,11 +81,41 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             break;
         }
         case tLT: {
-            bytecode.addBranch(BC_IFICMPGE, *curLabel);
+            if (expressionStartLabel) {
+                bytecode.addBranch(BC_IFICMPL, *expressionStartLabel);
+            } else {
+                if (!expressionEndLabel) {
+                    expressionEndLabel = new Label();
+                }
+                bytecode.addBranch(BC_IFICMPGE, *expressionEndLabel);
+            }
             break;
         }
         case tGT: {
-            bytecode.addBranch(BC_IFICMPLE, *curLabel);
+            if (expressionStartLabel) {
+                bytecode.addBranch(BC_IFICMPG, *expressionStartLabel);
+            } else {
+                if (!expressionEndLabel) {
+                    expressionEndLabel = new Label();
+                }
+                bytecode.addBranch(BC_IFICMPLE, *expressionEndLabel);
+            }
+            break;
+        }
+        case tAND: {
+            if (!expressionEndLabel) {
+                assert(!expressionStartLabel);
+                expressionEndLabel = new Label();
+            }
+            break;
+        }
+        case tOR: {
+            if (!expressionStartLabel) {
+                assert(!expressionEndLabel);
+                expressionStartLabel = new Label();
+            }
+            node->left()->visit(this);
+            node->right()->visit(this);
             break;
         }
         default:
@@ -210,16 +245,22 @@ void BytecodeTranslatorVisitor::visitForNode(ForNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {
-    curLabel = new Label();
     Label startLabel;
     uint32_t startPosition = bytecode.length();
     node->whileExpr()->visit(this);
+    if (expressionStartLabel) {
+        expressionEndLabel = new Label();
+        bytecode.addBranch(BC_JA, *expressionEndLabel);
+        expressionStartLabel->bind(bytecode.length(), &bytecode);
+    }
     node->loopBlock()->visit(this);
     bytecode.addBranch(BC_JA, startLabel);
     startLabel.bind(startPosition, &bytecode);
-    curLabel->bind(bytecode.length(), &bytecode);
-    delete curLabel;
-    curLabel = nullptr;
+    expressionEndLabel->bind(bytecode.length(), &bytecode);
+    delete expressionEndLabel;
+    expressionEndLabel = nullptr;
+    delete expressionStartLabel;
+    expressionStartLabel = nullptr;
 }
 
 void BytecodeTranslatorVisitor::visitIfNode(IfNode *node) {

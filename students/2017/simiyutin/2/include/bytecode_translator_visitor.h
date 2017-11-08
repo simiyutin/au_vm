@@ -48,5 +48,6 @@ private:
     std::vector<mathvm::VarType> stack;
     int topMostVariablesNum = -1;
     std::vector<std::string> stringConstants = {""};
-    mathvm::Label * curLabel = nullptr;
+    mathvm::Label * expressionEndLabel = nullptr;
+    mathvm::Label * expressionStartLabel = nullptr;
 };

@@ -219,6 +219,28 @@ private:
         }
     }
 
+    void handleCmpg() {
+        int16_t shift = bytecode.getInt16(executionPoint);
+        int64_t upper = stack.getTyped<int64_t>();
+        int64_t lower = stack.getTyped<int64_t>();
+        if (upper > lower) {
+            executionPoint += shift;
+        } else {
+            executionPoint += sizeof(int16_t);
+        }
+    }
+
+    void handleCmpl() {
+        int16_t shift = bytecode.getInt16(executionPoint);
+        int64_t upper = stack.getTyped<int64_t>();
+        int64_t lower = stack.getTyped<int64_t>();
+        if (upper < lower) {
+            executionPoint += shift;
+        } else {
+            executionPoint += sizeof(int16_t);
+        }
+    }
+
     void handleJa() {
         int16_t shift = bytecode.getInt16(executionPoint);
         executionPoint += shift;
