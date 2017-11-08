@@ -137,6 +137,11 @@ void BytecodeTranslatorVisitor::visitBinaryOpNode(BinaryOpNode *node) {
             node->right()->visit(this);
             break;
         }
+        case tRANGE: {
+            node->left()->visit(this);
+            node->right()->visit(this);
+            break;
+        }
         default:
             std::cout << "unhandled binary token:" << tokenStr(node->kind()) << std::endl;
             exit(42);
@@ -262,12 +267,42 @@ void BytecodeTranslatorVisitor::visitStoreNode(StoreNode *node) {
 }
 
 void BytecodeTranslatorVisitor::visitForNode(ForNode *node) {
-    //std::cout << "start forNode" << std::endl;
-    //std::cout << "expression: " << std::endl;
-    node->inExpr()->visit(this);
-    //std::cout << "body: " << std::endl;
+
+    node->inExpr()->visit(this); // на стеке сейчас находится коненое значение, а потом начальное значение
+    bytecode.addInsn(BC_SWAP);
+
+    // присваиваем начальное значение переменной
+    bytecode.addInsn(getStoreInsn(VT_INT));
+    bytecode.addUInt16(varMap[node->var()]);
+
+    Label startLabel;
+    uint32_t startPosition = bytecode.length();
+    Label endLabel;
+
+    //проверяем, не нужно ли прекратить цикл. Предполагается, что на вершине стека находится верхняя граница отерируемой переменной
+    bytecode.addInsn(getLoadInsn(VT_INT));
+    bytecode.addUInt16(varMap[node->var()]);
+    bytecode.addBranch(BC_IFICMPG, endLabel);
+
+    //выполняем вычисления
     node->body()->visit(this);
-    //std::cout << "end forNode" << std::endl;
+
+    //инкрементируем переменную
+    bytecode.addInsn(getLoadInsn(VT_INT));
+    bytecode.addUInt16(varMap[node->var()]);
+    bytecode.addInsn(BC_ILOAD1);
+    bytecode.addInsn(BC_IADD);
+    bytecode.addInsn(getStoreInsn(VT_INT));
+    bytecode.addUInt16(varMap[node->var()]);
+
+    //делаем джамп к проверке
+    bytecode.addInsn(BC_POP);
+    bytecode.addBranch(BC_JA, startLabel);
+    startLabel.bind(startPosition, &bytecode);
+
+    //конец цикла
+    endLabel.bind(bytecode.current(), &bytecode);
+    
 }
 
 void BytecodeTranslatorVisitor::visitWhileNode(WhileNode *node) {

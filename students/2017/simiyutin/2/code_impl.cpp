@@ -34,6 +34,12 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
             {BC_DLOAD, [this](){handleLoad<double>();}},
             {BC_SLOAD, [this](){handleLoad<std::string>();}},
 
+            {BC_ILOAD1, [this](){handleLoad1<int64_t>();}},
+            {BC_DLOAD1, [this](){handleLoad1<double>();}},
+
+            {BC_ILOAD0, [this](){handleLoad0<int64_t>();}},
+            {BC_DLOAD0, [this](){handleLoad0<double>();}},
+
             {BC_IADD, [this](){handleAdd<int64_t>();}},
             {BC_DADD, [this](){handleAdd<double>();}},
 
@@ -61,7 +67,7 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
             {BC_LOADDVAR, [this](){handleLoadVar<double>();}},
             {BC_LOADIVAR, [this](){handleLoadVar<int64_t>();}},
             {BC_LOADSVAR, [this](){handleLoadVar<std::string>();}},
-            
+
             {BC_IPRINT, [this](){handlePrint<int64_t>();}},
             {BC_DPRINT, [this](){handlePrint<double>();}},
             {BC_SPRINT, [this](){handlePrint<std::string>();}},
@@ -73,6 +79,9 @@ Status* CodeImpl::execute(vector<pVar> &vars) {
             {BC_IFICMPE, [this](){handleCmpe();}},
             {BC_IFICMPNE, [this](){handleCmpne();}},
             {BC_JA, [this](){handleJa();}},
+
+            {BC_SWAP, [this](){handleSwap();}},
+            {BC_POP, [this](){handlePop();}},
     };
 
     while (executionPoint < bytecode.length()) {

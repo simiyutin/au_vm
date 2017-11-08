@@ -43,8 +43,9 @@ private:
         template <typename T>
         T getTyped() {
             if (_data.size() < sizeof(T)) {
-                std::cout << "bad" << std::endl;
-                std::cout << _data.size() << std::endl;
+                std::cout << "stack has less bytes than needed for requested type" << std::endl;
+                std::cout << "cur stack size: " << _data.size() << std::endl;
+                std::cout << "needed: " << sizeof(T) << std::endl;
                 exit(42);
             }
 
@@ -75,6 +76,18 @@ private:
         uint16_t stringTableIndex = bytecode.getInt16(executionPoint);
         stack.addUInt16(stringTableIndex);
         executionPoint += sizeof(uint16_t);
+    }
+
+    template <typename T>
+    void handleLoad1() {
+        T val = 1;
+        stack.addTyped(val);
+    }
+
+    template <typename T>
+    void handleLoad0() {
+        T val = 0;
+        stack.addTyped(val);
     }
 
 
@@ -201,6 +214,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper >= lower) {
             executionPoint += shift;
         } else {
@@ -212,6 +227,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper <= lower) {
             executionPoint += shift;
         } else {
@@ -223,6 +240,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper > lower) {
             executionPoint += shift;
         } else {
@@ -234,6 +253,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper < lower) {
             executionPoint += shift;
         } else {
@@ -245,6 +266,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper == lower) {
             executionPoint += shift;
         } else {
@@ -256,6 +279,8 @@ private:
         int16_t shift = bytecode.getInt16(executionPoint);
         int64_t upper = stack.getTyped<int64_t>();
         int64_t lower = stack.getTyped<int64_t>();
+        stack.addTyped(lower);
+        stack.addTyped(upper);
         if (upper != lower) {
             executionPoint += shift;
         } else {
@@ -266,6 +291,20 @@ private:
     void handleJa() {
         int16_t shift = bytecode.getInt16(executionPoint);
         executionPoint += shift;
+    }
+
+    //assume swapping integers
+    void handleSwap() {
+        int64_t upper = stack.getTyped<int64_t>();
+        int64_t lower = stack.getTyped<int64_t>();
+        stack.addInt64(upper);
+        stack.addInt64(lower);
+    }
+
+    //assume popping integers
+    void handlePop() {
+        int64_t upper = stack.getTyped<int64_t>();
+        (void) upper;
     }
 
     template <typename T>
